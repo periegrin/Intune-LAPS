@@ -57,11 +57,14 @@ Automatic account management and account-name randomization are supported on Win
 
 When account-name randomization is enabled, Windows LAPS generates a randomized account name based on the configured naming convention.
 
-For public documentation, the actual account name has been redacted:
+For public documentation, the actual account naming convention has been redacted.
+
+The implementation uses a configured prefix combined with a randomized numeric suffix.
+
+Example:
 
 ```text
-XXXXXX
-```
+<REDACTED_PREFIX>_XXXXXX
 
 The actual account name, password, device identifiers, security identifiers, and internal naming conventions are intentionally not published.
 
