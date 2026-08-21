@@ -1,26 +1,22 @@
 # Troubleshooting and Lessons Learned
 
-## Issue: LAPS Appeared to Affect Devices Outside the Test Group
+## Issue: LAPS Affected Devices Outside the Test Group
 
 ### Symptoms
 
 The Windows LAPS policy was assigned to a specific test group in Microsoft Intune.
 
-However, during the initial testing, LAPS appeared to be affecting devices outside the intended test population.
-
-This was unexpected because the Intune policy assignment was configured specifically for the selected test devices.
+However, LAPS appeared to be affecting devices outside the intended test population, despite the Intune policy assignment being configured specifically for the selected test devices.
 
 ### Initial Assumption
 
-The first area checked was the Microsoft Intune assignment.
+The first step was to validate the Microsoft Intune assignment scope. The assignment appeared correct, so the investigation expanded to consider whether other configuration mechanisms might be affecting the devices.
 
-The assignment scope appeared correct, so the investigation moved to the existing endpoint configuration to determine whether another configuration was affecting the devices.
+## Root Cause: Conflicting Group Policy Configuration
 
-## Root Cause
+During the investigation, we discovered an existing Group Policy Object (GPO) that was already configuring Windows LAPS.
 
-During the investigation, we discovered that an existing Group Policy Object (GPO) was already configuring Windows LAPS.
-
-This meant the environment had two potential management paths for Windows LAPS:
+This created two independent management paths for LAPS:
 
 ```text
 Group Policy
@@ -32,126 +28,29 @@ Microsoft Intune
      +---- Windows LAPS
 ```
 
-The existing GPO was applying LAPS configuration independently of the new Intune policy.
-
-This explained why the initial behavior did not match the expected Intune assignment scope.
-
-The issue was not caused by the Intune assignment itself. The existing Group Policy configuration was also managing LAPS on affected devices.
+**The root cause was not the Intune assignment itself.** The existing Group Policy configuration was applying LAPS independently, which explained why device scope did not match the Intune assignment.
 
 ## Resolution
 
-The existing LAPS GPO configuration was retired as part of the migration and testing process.
+The existing LAPS GPO configuration was disabled as part of the migration and testing process.
 
-The test was then repeated using the same Intune assignment.
-
-After the existing Group Policy LAPS configuration was retired, the Intune LAPS policy behaved according to the expected assignment scope.
-
-We were able to target the LAPS configuration only to the devices intended for testing.
-
-This allowed us to continue with the pilot rollout.
+After removing the conflicting GPO, the Intune LAPS policy behaved according to the expected assignment scope, allowing us to target LAPS only to the intended test devices.
 
 ## Verification After the Fix
 
-After resolving the GPO conflict, we performed another validation cycle.
+For details on how the configuration was verified through Intune and Microsoft Entra ID, see [Testing and Validation — Verification](testing.md#verification).
 
-The implementation was verified through both Microsoft Intune and Microsoft Entra ID.
+The verification confirmed that:
 
-### Microsoft Intune Verification
+- The Intune policy was applied only to intended test devices
+- Windows LAPS successfully managed the local administrator account
+- Password backup to Microsoft Entra ID was working as expected
 
-From Microsoft Intune, we verified the device's **Local admin password** information.
+## Lesson Learned: Multiple Management Paths
 
-We confirmed that Windows LAPS had successfully:
+One of the most important lessons from this implementation was that **validating an Intune assignment is only one part of endpoint troubleshooting.**
 
-- Created and managed the local administrator account
-- Generated and managed the LAPS password
-- Reported the password rotation information
-- Made the password available for authorized retrieval
-
-The actual account name and password are intentionally not included in this repository.
-
-### Microsoft Entra ID Verification
-
-We then verified the LAPS information through Microsoft Entra ID.
-
-This confirmed that the password backup process was working as expected.
-
-The complete management flow was validated:
-
-```text
-Microsoft Intune
-       |
-       | LAPS Policy
-       v
-Windows Device
-       |
-       | Windows LAPS
-       v
-Local Administrator Account
-       |
-       | Password Backup
-       v
-Microsoft Entra ID
-```
-
-This verification confirmed that the Intune policy was being applied to the intended test devices and that Windows LAPS was successfully backing up the managed password to Microsoft Entra ID.
-
-## Testing Approach
-
-The implementation was deployed using a staged approach rather than immediately applying the configuration to the entire environment.
-
-```text
-Selected IT Devices
-        |
-        v
-Initial Testing
-        |
-        v
-Pilot Groups
-        |
-        v
-Production
-```
-
-### Initial Testing
-
-The first phase used selected IT devices.
-
-The purpose was to:
-
-- Validate the LAPS configuration
-- Confirm local administrator account management
-- Verify password rotation
-- Verify password backup to Microsoft Entra ID
-- Identify unexpected behavior
-- Collect feedback from the IT team
-
-During this phase, we discovered the existing LAPS GPO.
-
-Because the issue was identified during controlled testing, we were able to investigate and resolve it before moving further into the rollout.
-
-### Pilot Deployment
-
-After the GPO issue was resolved, the Intune LAPS configuration was tested again.
-
-Once the expected behavior was confirmed, the configuration was moved to pilot groups.
-
-The pilot phase provided another opportunity to validate the configuration with a larger but still controlled device population.
-
-### Production
-
-The production rollout was planned only after the configuration had successfully passed the initial IT testing and pilot stages.
-
-This staged approach reduced the risk of introducing an unexpected configuration change across the wider Windows device population.
-
-## Lesson Learned
-
-One of the most important lessons from this implementation was that validating an Intune assignment is only one part of endpoint troubleshooting.
-
-In an enterprise environment, a device can be affected by multiple management mechanisms.
-
-When introducing a new Intune policy, it is important to understand what other configuration mechanisms may already be managing the same Windows feature.
-
-These may include:
+In an enterprise environment, a device can be affected by multiple management mechanisms:
 
 - Existing Group Policy configuration
 - Existing Intune configuration profiles
@@ -161,138 +60,43 @@ These may include:
 - Other endpoint management tools
 - Existing Windows configuration
 
-A policy can be correctly assigned in Intune and still produce unexpected behavior because another management mechanism is configuring the same Windows feature.
+A policy can be correctly assigned in Intune and still produce unexpected behavior if another management mechanism is configuring the same Windows feature.
 
-In our case, the Intune assignment was correct.
+**Key principle:** A correctly assigned Intune policy does not necessarily mean it is the only configuration affecting a device. Understanding the complete management state of an endpoint is essential when troubleshooting unexpected behavior.
 
-The unexpected behavior was caused by an existing Windows LAPS configuration through Group Policy.
+## Migration Checklist: Moving LAPS from Group Policy to Intune
 
-## Migration Consideration
+Moving Windows LAPS management from Group Policy to Intune should be treated as a **configuration migration**, not simply a new policy deployment.
 
-Moving Windows LAPS management from Group Policy to Intune should be treated as a configuration migration rather than simply creating a new Intune policy.
+Before broad deployment:
 
-Before broad deployment, we recommend:
+1. Identify existing Windows LAPS configuration (Group Policy, Intune profiles, scripts, etc.)
+2. Determine which devices and users are affected by existing configuration
+3. Establish which management platform will become authoritative
+4. Identify and disable or retire all conflicting configuration
+5. Test the new Intune configuration on a controlled device group
+6. Validate local administrator account management
+7. Validate password rotation
+8. Validate password backup
+9. Validate authorized password retrieval
+10. Move to pilot deployment (see [Testing and Validation](testing.md))
+11. Monitor the pilot population
+12. Proceed to production after successful validation
 
-1. Identify existing Windows LAPS configuration.
-2. Determine where the existing configuration is being applied.
-3. Establish which management platform will become authoritative.
-4. Identify and remove or retire conflicting configuration.
-5. Test the new configuration on a controlled device group.
-6. Validate local administrator account management.
-7. Validate password rotation.
-8. Validate password backup.
-9. Validate authorized password retrieval.
-10. Continue through pilot deployment.
-11. Monitor the pilot population.
-12. Proceed to production after successful validation.
-
-## Security Lesson
-
-Before Windows LAPS was implemented, the IT team maintained local administrator passwords in an Excel spreadsheet.
-
-The spreadsheet provided a way to recover local administrator credentials, but it also meant that sensitive credentials were being maintained manually.
-
-Windows LAPS changed this model by allowing Windows to manage the local administrator password automatically and by providing centralized authorized retrieval through Microsoft Entra ID.
-
-This also removes the dependency on manually maintaining a password record for every device.
-
-The public documentation intentionally does not expose:
-
-- Actual passwords
-- Password fragments
-- Actual local administrator account names
-- Device names
-- Device identifiers
-- Tenant information
-- Security identifiers
-- User credentials
-- Access tokens
-- Client secrets
-- Internal policy names
-- Internal assignment groups
-- Internal URLs
-- Company-specific security configuration
-
-Screenshots used in the project are sanitized before publication.
-
-Production configuration values may also be generalized or redacted where publishing the exact value would provide unnecessary information about the organization's environment.
+This checklist reflects the actual process followed in this implementation, where step 4 (disabling the existing GPO) was critical to ensuring the migration succeeded.
 
 ## Practical Takeaway
 
-The most valuable part of this project was not simply enabling Windows LAPS.
+The most valuable aspect of this project was not simply enabling Windows LAPS—it was identifying how LAPS interacted with existing endpoint management systems and resolving the conflict before production rollout.
 
-It was identifying how LAPS interacted with the existing endpoint management environment and resolving the configuration conflict before production rollout.
+This experience reinforced the importance of:
 
-The Intune assignment was correct, but the device was also being influenced by an existing Group Policy configuration.
+- Understanding the complete management state of an endpoint before deployment
+- Treating major policy migrations as comprehensive projects, not isolated policy changes
+- Using controlled testing to identify configuration conflicts early
+- Documenting findings to guide future migrations
 
-Once the conflicting GPO was removed, the Intune-managed LAPS configuration behaved as expected.
-
-The experience reinforced an important endpoint management principle:
-
-> A correctly assigned Intune policy does not necessarily mean it is the only configuration affecting a device.
-
-Understanding the complete management state of an endpoint is essential when troubleshooting unexpected behavior.
-
-## Final Outcome
-
-After the existing LAPS GPO was disabled, we were able to:
-
-- Target the LAPS policy to the intended test devices
-- Validate local administrator account management
-- Confirm password rotation
-- Confirm password backup to Microsoft Entra ID
-- Verify authorized password retrieval
-- Continue with the pilot rollout
-
-The implementation provided a practical example of migrating Windows LAPS management into Microsoft Intune within an existing enterprise endpoint environment.
-
-It also demonstrated why controlled testing and understanding existing endpoint configuration are important before introducing a new management platform.
-
-## Summary
-
-The implementation followed this process:
-
-```text
-Existing Environment
-        |
-        v
-Identify LAPS Requirement
-        |
-        v
-Configure Windows LAPS in Intune
-        |
-        v
-Selected IT Device Testing
-        |
-        v
-Unexpected Device Scope
-        |
-        v
-Investigate Existing Configuration
-        |
-        v
-Existing LAPS GPO Identified
-        |
-        v
-Disable Conflicting GPO
-        |
-        v
-Retest
-        |
-        v
-Intune Assignment Behaves as Expected
-        |
-        v
-Verify Intune + Entra ID
-        |
-        v
-Pilot Deployment
-        |
-        v
-Production Rollout
-```
-
-The main lesson was that endpoint troubleshooting must consider the complete device management state, not only the policy currently being deployed.
+For implementation details and the staged testing approach, see [Windows LAPS Implementation](implementation.md) and [Testing and Validation](testing.md).
 
 ---
 
