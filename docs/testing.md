@@ -106,7 +106,7 @@ Microsoft Intune device view.
 The screenshot has been sanitized for public documentation. Sensitive
 information has been redacted.
 
-![Intune LAPS Local Admin Password - Redacted](https://raw.githubusercontent.com/periegrin/Intune-LAPS/main/docs/images/Intune-LAPS_Local_Admin_Password_Redacted.png)
+![Intune LAPS Local Admin Password - Redacted](../blob/main/docs/images/Intune-LAPS_Local_Admin_Password_Redacted.png?raw=true)
 
 ### Microsoft Entra ID Verification
 
