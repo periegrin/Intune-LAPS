@@ -19,6 +19,8 @@ Pilot Groups
 Production
 ```
 
+![LAPS Architecture Diagram](./images/LAPS.png)
+
 The first devices were selected from the IT team so that the
 implementation could be tested under controlled conditions.
 
