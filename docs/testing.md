@@ -98,16 +98,6 @@ From the device's **Local admin password** view, we verified:
 The actual account name and password are intentionally excluded from
 this repository.
 
-### Intune LAPS Verification Screenshot
-
-The screenshot below shows the Windows LAPS information available from the
-Microsoft Intune device view.
-
-The screenshot has been sanitized for public documentation. Sensitive
-information has been redacted.
-
-![LAPS Architecture Diagram](./images/LAPS.png)
-
 ### Microsoft Entra ID Verification
 
 The LAPS information was also checked through Microsoft Entra ID to
