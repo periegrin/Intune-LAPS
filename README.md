@@ -14,6 +14,8 @@ The goal was to move away from manually maintaining local administrator credenti
 
 The solution was Windows LAPS, managed through Microsoft Intune with password backup to Microsoft Entra ID.
 
+---
+
 ## Implementation Approach
 
 We used a staged deployment rather than immediately applying the configuration to all devices.
@@ -28,16 +30,18 @@ After the initial testing, the configuration was moved to pilot groups before pr
 
 This staged approach allowed us to identify and resolve an existing configuration issue before the solution was introduced more broadly.
 
+---
+
 ## Configuration
 
-The implementation used Windows LAPS policy settings to manage the local administrator account, rotate the password automatically, and back up the password to Microsoft Entra ID.
+The implementation uses Windows LAPS policy settings to manage the local administrator account, rotate the password automatically, and back up the password to Microsoft Entra ID.
 
 For security reasons, the exact production values and internal naming conventions are not published in this repository.
 
-The implementation included the following capabilities:
+The implementation includes the following capabilities:
 
 | Setting | Implementation |
-|---|---|
+| --- | --- |
 | Password Backup | Microsoft Entra ID |
 | Password Rotation | Configured according to organizational requirements |
 | Password Complexity | Configured according to organizational requirements |
@@ -51,15 +55,17 @@ The implementation included the following capabilities:
 
 The values shown in screenshots and examples in this repository are sanitized where necessary and should not be interpreted as the organization's production security baseline.
 
-### Account Name Randomization
+---
+
+## Account Name Randomization
 
 Automatic account management and account-name randomization are supported on Windows 11 version 24H2 and later.
 
-When account-name randomization is enabled, Windows LAPS generates a randomized account name based on the configured naming convention.
+When account-name randomization is enabled, Windows LAPS generates a randomized account name using the configured naming convention.
+
+The randomized account name receives a six-digit numeric suffix.
 
 For public documentation, the actual account naming convention has been redacted.
-
-The implementation uses a configured prefix combined with a randomized numeric suffix.
 
 Example:
 
