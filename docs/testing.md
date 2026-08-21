@@ -106,7 +106,7 @@ Microsoft Intune device view.
 The screenshot has been sanitized for public documentation. Sensitive
 information has been redacted.
 
-![LAPS Architecture Diagram](https://raw.githubusercontent.com/periegrin/Intune-LAPS/main/docs/images/LAPS.png)
+![LAPS Architecture Diagram](./images/LAPS.png)
 
 ### Microsoft Entra ID Verification
 
