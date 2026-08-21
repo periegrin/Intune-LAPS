@@ -19,7 +19,7 @@ Pilot Groups
 Production
 ```
 
-![LAPS Architecture Diagram](./images/LAPS.png)
+![LAPS Architecture Diagram](https://raw.githubusercontent.com/periegrin/Intune-LAPS/main/docs/images/LAPS.png)
 
 The first devices were selected from the IT team so that the
 implementation could be tested under controlled conditions.
@@ -108,7 +108,7 @@ Microsoft Intune device view.
 The screenshot has been sanitized for public documentation. Sensitive
 information has been redacted.
 
-![Intune LAPS Local Admin Password - Redacted](../blob/main/docs/images/Intune-LAPS_Local_Admin_Password_Redacted.png?raw=true)
+![Intune LAPS Local Admin Password - Redacted](https://raw.githubusercontent.com/periegrin/Intune-LAPS/main/docs/images/Intune-LAPS_Local_Admin_Password_Redacted.png)
 
 ### Microsoft Entra ID Verification
 
